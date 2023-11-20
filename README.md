@@ -1,7 +1,7 @@
 # Minigrep (Rust Book Project)
 
 This repo contains an implementation of the project tutorial in Chapter 12 of
-the book, [The Rust Programming Language](https://doc.rust-lang.org/book/ch13-00-functional-features.html).
+the book, [The Rust Programming Language](https://doc.rust-lang.org/book/ch12-00-an-io-project.html).
 
 The application is called `minigrep`, a simplified implementation of the `grep` utility (*g*lobally search for a *re*gular expression and *p*rint).
 
