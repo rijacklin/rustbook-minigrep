@@ -21,6 +21,11 @@ struct Config<'a> {
 
 impl Config<'_> {
     fn new(args: &[String]) -> Config {
+        // Basic error handling
+        if args.len() < 3 {
+            panic!("not enough arguments");
+        }
+
         // Use &str and lifetimes for better performance than `.clone()`
         let query = args[1].as_str();
         let file_path = args[2].as_str();
