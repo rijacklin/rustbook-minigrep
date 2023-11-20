@@ -1,9 +1,10 @@
 use std::env;
 use std::fs;
+use std::io;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args);
+    let config = Config::build(&args).expect("Unable to load config.");
 
     println!("Searching for {}", config.query);
     println!("In file {}", config.file_path);
@@ -20,7 +21,8 @@ struct Config<'a> {
 }
 
 impl Config<'_> {
-    fn new(args: &[String]) -> Config {
+    // Rename `new` to `build` as it's expected `new` will never fail
+    fn build(args: &[String]) -> Result<Config, io::Error> {
         // Basic error handling
         if args.len() < 3 {
             panic!("not enough arguments");
@@ -29,6 +31,6 @@ impl Config<'_> {
         // Use &str and lifetimes for better performance than `.clone()`
         let query = args[1].as_str();
         let file_path = args[2].as_str();
-        Config { query, file_path }
+        Ok(Config { query, file_path })
     }
 }
