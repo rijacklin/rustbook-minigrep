@@ -1,10 +1,13 @@
 use std::env;
 use std::fs;
-use std::io;
+use std::process;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::build(&args).expect("Unable to load config.");
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
 
     println!("Searching for {}", config.query);
     println!("In file {}", config.file_path);
@@ -22,10 +25,10 @@ struct Config<'a> {
 
 impl Config<'_> {
     // Rename `new` to `build` as it's expected `new` will never fail
-    fn build(args: &[String]) -> Result<Config, io::Error> {
+    fn build(args: &[String]) -> Result<Config, &'static str> {
         // Basic error handling
         if args.len() < 3 {
-            panic!("not enough arguments");
+            return Err("not enough arguments");
         }
 
         // Use &str and lifetimes for better performance than `.clone()`
