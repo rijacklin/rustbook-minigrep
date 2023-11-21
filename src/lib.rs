@@ -2,23 +2,28 @@ use std::env;
 use std::error::Error;
 use std::fs;
 
-pub struct Config<'a> {
-    pub query: &'a str,
-    pub file_path: &'a str,
+pub struct Config {
+    pub query: String,
+    pub file_path: String,
     pub ignore_case: bool,
 }
 
-impl Config<'_> {
-    // Rename `new` to `build` as it's expected `new` will never fail
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        // Basic error handling
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
+impl Config {
+    pub fn build(
+        mut args: impl Iterator<Item = String>,
+    ) -> Result<Config, &'static str> {
+        args.next(); // Skip the program name
 
-        // Use &str and lifetimes for better performance than `.clone()`
-        let query = args[1].as_str();
-        let file_path = args[2].as_str();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file path"),
+        };
+
         let ignore_case = env::var("IGNORE_CASE").is_ok();
 
         Ok(Config {
@@ -46,31 +51,22 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(
     query: &str,
     contents: &'a str,
 ) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents
+        .lines()
+        .filter(|line| line
+                .to_lowercase()
+                .contains(query.to_lowercase().as_str()))
+        .collect()
 }
 
 #[cfg(test)]
@@ -86,7 +82,10 @@ safe, fast, productive.
 Pick three.
 Duct tape.";
 
-        assert_eq!(vec!["safe, fast, productive."], search(query, contents));
+        assert_eq!(
+            vec!["safe, fast, productive."],
+            search(query, contents)
+        );
     }
     #[test]
     fn case_insensitive() {
@@ -97,6 +96,9 @@ safe, fast, productive.
 Pick three.
 Trust me.";
 
-        assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, contents));
+        assert_eq!(
+            vec!["Rust:", "Trust me."],
+            search_case_insensitive(query, contents)
+        );
     }
 }
